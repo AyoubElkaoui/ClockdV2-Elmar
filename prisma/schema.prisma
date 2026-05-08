@@ -1,0 +1,151 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  ADMIN
+  REVIEWER
+  VIEWER
+}
+
+enum TimeEntryStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  EXPORTED
+  EXPORT_FAILED
+}
+
+enum SyncStatus {
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+model Cv2User {
+  id            String            @id @default(cuid())
+  email         String            @unique
+  name          String
+  password      String
+  role          Role              @default(VIEWER)
+  isActive      Boolean           @default(true)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  reviewActions Cv2ReviewAction[]
+  auditLogs     Cv2AuditLog[]
+
+  @@map("cv2_users")
+}
+
+model Cv2ClockwiseConfig {
+  id           String    @id @default(cuid())
+  baseUrl      String    @default("https://elmarservices.clockwise.info/api/v2")
+  clientId     String
+  clientSecret String
+  accessToken  String?
+  refreshToken String?
+  tokenExpiry  DateTime?
+  lastSyncAt   DateTime?
+  syncInterval Int       @default(15)
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@map("cv2_clockwise_config")
+}
+
+model Cv2TimeEntry {
+  id                  String            @id @default(cuid())
+  clockwiseEntryId    String            @unique
+  employeeId          String
+  employeeName        String
+  projectId           String?
+  projectName         String?
+  hours               Float
+  date                DateTime
+  startTime           DateTime?
+  endTime             DateTime?
+  breakMinutes        Int?
+  kilometers          Float?
+  expenses            Float?
+  expensesDescription String?
+  workLocation        String?
+  materials           String?
+  description         String?
+  status              TimeEntryStatus   @default(PENDING)
+  exportedAt          DateTime?
+  errorMessage        String?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  reviewActions       Cv2ReviewAction[]
+
+  @@index([status])
+  @@index([date])
+  @@index([employeeId])
+  @@map("cv2_time_entries")
+}
+
+model Cv2ReviewAction {
+  id        String          @id @default(cuid())
+  entryId   String
+  userId    String
+  action    TimeEntryStatus
+  reason    String?
+  createdAt DateTime        @default(now())
+  entry     Cv2TimeEntry    @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  user      Cv2User         @relation(fields: [userId], references: [id])
+
+  @@index([entryId])
+  @@index([userId])
+  @@map("cv2_review_actions")
+}
+
+model Cv2ProjectMapping {
+  id                   String   @id @default(cuid())
+  clockwiseProjectId   String   @unique
+  clockwiseProjectName String
+  syntessProjectCode   String
+  syntessProjectName   String?
+  syntessWorkGcId      Int?
+  isActive             Boolean  @default(true)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@map("cv2_project_mappings")
+}
+
+model Cv2SyncLog {
+  id             String     @id @default(cuid())
+  startedAt      DateTime   @default(now())
+  completedAt    DateTime?
+  status         SyncStatus @default(RUNNING)
+  entriesFetched Int        @default(0)
+  entriesCreated Int        @default(0)
+  entriesSkipped Int        @default(0)
+  errorMessage   String?
+
+  @@index([startedAt])
+  @@map("cv2_sync_logs")
+}
+
+model Cv2AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  action     String
+  entityType String
+  entityId   String?
+  oldValue   Json?
+  newValue   Json?
+  createdAt  DateTime @default(now())
+  user       Cv2User? @relation(fields: [userId], references: [id])
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@map("cv2_audit_logs")
+}
