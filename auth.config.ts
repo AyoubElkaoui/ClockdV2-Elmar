@@ -1,6 +1,7 @@
 import type { NextAuthConfig } from "next-auth";
 
 export const authConfig = {
+  trustHost: true,
   pages: {
     signIn: "/login",
   },
@@ -16,7 +17,12 @@ export const authConfig = {
         nextUrl.pathname.startsWith("/entries") ||
         nextUrl.pathname.startsWith("/mappings") ||
         nextUrl.pathname.startsWith("/settings") ||
-        nextUrl.pathname.startsWith("/logs");
+        nextUrl.pathname.startsWith("/logs") ||
+        nextUrl.pathname.startsWith("/geschiedenis") ||
+        nextUrl.pathname.startsWith("/statistieken") ||
+        nextUrl.pathname.startsWith("/medewerkers") ||
+        nextUrl.pathname.startsWith("/account") ||
+        nextUrl.pathname.startsWith("/help");
 
       if (isOnLogin && isLoggedIn) {
         return Response.redirect(new URL("/dashboard", nextUrl));
