@@ -5,7 +5,7 @@ import { PasswordForm, ProfileForm } from "./account-forms";
 const ROLE_LABEL: Record<string, string> = {
   ADMIN: "Beheerder",
   REVIEWER: "Reviewer",
-  VIEWER: "Kijker",
+  VIEWER: "Kijkers",
 };
 
 export default async function AccountPage() {
