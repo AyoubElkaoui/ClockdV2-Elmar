@@ -1,9 +1,7 @@
 name: Clockwise Sync
 
 on:
-  schedule:
-    - cron: "*/15 * * * *"   # elke 15 minuten
-  workflow_dispatch:          # handmatig triggeren vanuit GitHub
+  workflow_dispatch:          # alleen handmatig triggeren — cron activeren na live koppeling
 
 jobs:
   sync:
